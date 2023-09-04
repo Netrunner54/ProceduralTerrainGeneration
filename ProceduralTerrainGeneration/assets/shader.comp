@@ -1,0 +1,79 @@
+#version 460
+
+layout (local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+
+layout (r32f, binding = 0) uniform image2D uImage;
+uniform float uSeed;
+
+
+// pseudo random number generation
+float random(in vec2 p)
+{
+	vec2 K = vec2(23.14069263277926, 2.665144142690225); // [e^pi, 2^sqrt(2)] 
+	return fract(cos(dot(p, K)) * 12345.6789 * uSeed);
+}
+
+
+// bicubic interpolation
+float bicubic_interpolation(in float a, in float b, in float w)
+{
+	return (b - a) * (3.0 - w * 2.0) * w * w + a;
+}
+
+
+// generates perlin noise value for given coordinates
+float perlin_noise_2D(in ivec2 p, in int octaves = 4)
+{
+	float value = 0.0;
+	float scale = 1.0;
+	float scale_acc = 0.0;
+
+	int pitch = 64;
+	for (int o = 0; o < octaves; o++)
+	{
+		// calculating pitch
+		pitch = 512 >> o;
+
+		// setting sampling points
+		int X0 = p.x / pitch;
+		int X1 = X0 + 1;
+		int Y0 = p.y / pitch;
+		int Y1 = Y0 + 1;
+
+		// getting pseudo random values for each corner 
+		float random00 = random(ivec2(X0, Y0));
+		float random10 = random(ivec2(X1, Y0));
+		float random01 = random(ivec2(X0, Y1));
+		float random11 = random(ivec2(X1, Y1));
+
+		// bicubic interpolation
+		float top = bicubic_interpolation(random01, random11, float(p.x) / float(pitch) - float(X0));
+		float bottom = bicubic_interpolation(random00, random10, float(p.x) / float(pitch) - float(X0));
+		value += scale * bicubic_interpolation(bottom, top, float(p.y) / float(pitch) - float(Y0));
+
+		// updating variables
+		scale_acc += scale;
+		scale /= 2.0;
+	}
+
+	return value / scale_acc;
+}
+
+
+// entry point
+void main()
+{
+	ivec2 texel_coord = ivec2(gl_GlobalInvocationID.xy);
+
+	// calculating value of each pixel
+	float see_level = 0.50;
+	float max_level = 1.0;
+	float value = perlin_noise_2D(texel_coord, 8);
+	if (value <= see_level)
+		value = 0.0;
+	else
+		value = (value - see_level) / (1.0 + (1.0 - max_level) - see_level);
+
+	// storing value of a pixel
+	imageStore(uImage, texel_coord, vec4(value));
+}
