@@ -1,5 +1,5 @@
-# Procerural Terrain Generation
-This project uses OpenGL to generate random terrain in compute shaders and render it in hight resolution using tesselation shaders. 
+# Procedural Terrain Generation
+This project uses OpenGL to generate random terrain in compute shaders and render it in high resolution using tesselation shaders. 
 
 ## Controls
 `W` `A` `S` `D` to move along x/z axis. <br>
