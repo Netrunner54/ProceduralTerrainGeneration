@@ -4,7 +4,6 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <stb_image.h>
 
 #include <fstream>
 #include <sstream>
@@ -57,13 +56,6 @@ int main()
 	gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 
 	OpenGLErrors::Enable();
-
-	//stbi_set_flip_vertically_on_load(true);
-	//int width, height, channels;
-	//unsigned char* data = stbi_load("assets/iceland_heightmap.png", &width, &height, &channels, 0);
-	//OpenGLTexture2D height_map(width, height, OpenGLTexture2D::RGBA8);
-	//height_map.SubData(width, height, data);
-	//stbi_image_free(data);
 
 	int width = 4096, height = 4096;
 	OpenGLTexture2D height_map(width, height, OpenGLTexture2D::ALPHA32F);
@@ -228,7 +220,7 @@ int main()
 		glUseProgram(p.GetID());
 		p.SetMat4("uVP", c.GetViewProjectionMatrix());
 		p.SetMat4("uView", c.GetViewMatrix());
-		p.SetInt("uHighQuality", 0);
+		p.SetInt("uHighQuality", 1);
 		p.SetInt("uHeightMap", 0);
 		glDrawArrays(GL_PATCHES, 0, rez * rez * 4);
 

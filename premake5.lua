@@ -21,7 +21,6 @@ project "ProceduralTerrainGeneration"
 	files {
 		"ProceduralTerrainGeneration/src/**.cpp",
 		"ProceduralTerrainGeneration/src/**.h",
-		"Dependencies/stbi/stb_image.cpp"
 	}
 
 	includedirs
@@ -29,7 +28,6 @@ project "ProceduralTerrainGeneration"
 		"Dependencies/glfw/include",
 		"Dependencies/glad/include",
 		"Dependencies/glm",
-		"Dependencies/stbi",
 	}
 
 	links
