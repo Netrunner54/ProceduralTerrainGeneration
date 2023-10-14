@@ -66,13 +66,14 @@ void main()
 	ivec2 texel_coord = ivec2(gl_GlobalInvocationID.xy);
 
 	// calculating value of each pixel
-	float see_level = 0.50;
-	float max_level = 1.0;
-	float value = perlin_noise_2D(texel_coord, 8);
+	float see_level = 0.5;
+	float value = perlin_noise_2D(texel_coord, 7);
 	if (value <= see_level)
 		value = 0.0;
 	else
-		value = (value - see_level) / (1.0 + (1.0 - max_level) - see_level);
+		//value = (value - see_level) / (1.0 + (1.0 - max_level) - see_level);
+		//value = (value - see_level) * (value / see_level);
+		value = mix(0.0, 1.0, (value - see_level) / (1.0 - see_level));
 
 	// storing value of a pixel
 	imageStore(uImage, texel_coord, vec4(value));
