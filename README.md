@@ -10,9 +10,8 @@ This project uses OpenGL to generate random terrain in compute shaders and rende
 `ESC` to exit. <br>
 
 ## Screenshots
-![1](https://github.com/Netrunner54/ProceduralTerrainGeneration/assets/81921482/01bee55a-21ce-4199-952a-272ae8ac9ae5)
-![2](https://github.com/Netrunner54/ProceduralTerrainGeneration/assets/81921482/9039bcc9-0a4e-406b-8e68-19c7716eed4a)
-![3](https://github.com/Netrunner54/ProceduralTerrainGeneration/assets/81921482/ad4ecc17-21e6-417c-8066-a589aa59b5bb)
+![1](https://github.com/Netrunner54/ProceduralTerrainGeneration/assets/81921482/984aecfa-3f52-428b-8b38-467af1d3df00)
+![2](https://github.com/Netrunner54/ProceduralTerrainGeneration/assets/81921482/8ea4bb2a-88d6-4092-8ee8-3a7a0b15c2d8)
 
 ## Build on Windows
 Run `premake.exe vs2022` to generate Visual Studio 2022 solution.
