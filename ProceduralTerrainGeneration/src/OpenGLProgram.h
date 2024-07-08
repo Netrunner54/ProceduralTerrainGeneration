@@ -37,11 +37,13 @@ public:
 	ProgramBinary GetProgramBinary() const;
 	unsigned int GetID() const { return m_ID; };
 	int GetUniformLocation(const char* name) const;
+	unsigned int GetUniformBlockIndex(const char* name) const;
 
 
 
 
 	/// Sets ///
+	void SetUniformBlockBinding(const char* name, unsigned int binding);
 
 	// Int
 	void SetInt(const char* name, const int value);
@@ -98,9 +100,18 @@ public:
 	void SetMat3(const char* name, const glm::mat3& mat);
 	void SetMat4(const char* name, const glm::mat4& mat);
 
-	void SetMat2Array(const char* name, int count, const glm::mat2& mat);
-	void SetMat3Array(const char* name, int count, const glm::mat3& mat);
-	void SetMat4Array(const char* name, int count, const glm::mat4& mat);
+	void SetMat2Array(const char* name, int count, const glm::mat2* mat);
+	void SetMat3Array(const char* name, int count, const glm::mat3* mat);
+	void SetMat4Array(const char* name, int count, const glm::mat4* mat);
+
+	// Double Matrixces
+	void SetDoubleMat2(const char* name, const glm::dmat2& mat);
+	void SetDoubleMat3(const char* name, const glm::dmat3& mat);
+	void SetDoubleMat4(const char* name, const glm::dmat4& mat);
+
+	void SetDoubleMat2Array(const char* name, int count, const glm::dmat2* mat);
+	void SetDoubleMat3Array(const char* name, int count, const glm::dmat3* mat);
+	void SetDoubleMat4Array(const char* name, int count, const glm::dmat4* mat);
 
 
 
@@ -161,9 +172,19 @@ public:
 	void UploadMat3(int location, const glm::mat3& mat);
 	void UploadMat4(int location, const glm::mat4& mat);
 
-	void UploadMat2Array(int location, int count, const glm::mat2& mat);
-	void UploadMat3Array(int location, int count, const glm::mat3& mat);
-	void UploadMat4Array(int location, int count, const glm::mat4& mat);
+	void UploadMat2Array(int location, int count, const glm::mat2* mat);
+	void UploadMat3Array(int location, int count, const glm::mat3* mat);
+	void UploadMat4Array(int location, int count, const glm::mat4* mat);
+
+	// Double Matrixes
+	void UploadDoubleMat2(int location, const glm::dmat2& mat);
+	void UploadDoubleMat3(int location, const glm::dmat3& mat);
+	void UploadDoubleMat4(int location, const glm::dmat4& mat);
+
+	void UploadDoubleMat2Array(int location, int count, const glm::dmat2* mat);
+	void UploadDoubleMat3Array(int location, int count, const glm::dmat3* mat);
+	void UploadDoubleMat4Array(int location, int count, const glm::dmat4* mat);
+
 
 
 	inline friend bool operator==(const OpenGLProgram& lhs, const OpenGLProgram& rhs) { return lhs.m_ID == rhs.m_ID; }

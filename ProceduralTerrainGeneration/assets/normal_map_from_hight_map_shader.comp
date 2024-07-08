@@ -1,0 +1,70 @@
+#version 460
+
+layout (local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+layout (r32f, binding = 1) uniform image2D uHeightMap;
+layout (rgba32f, binding = 1) uniform image2D uNormalMap;
+
+
+
+uniform ivec2 uSize; // size of height and normal map
+uniform float uC = 64.0; // coeficient 
+
+
+
+void main()
+{
+   ivec2 texelCoord = ivec2(gl_GlobalInvocationID.xy);
+   
+   float z = 0.0;
+   
+   
+   // values to interpolation
+   float left = imageLoad(uHeightMap, texelCoord - ivec2(1, 0)).r;
+   float right = imageLoad(uHeightMap, texelCoord + ivec2(1, 0)).r;
+   float lr_dist = 2.0;
+   
+   // edges
+   if (texelCoord.x == 0) // texels on left edge of an image
+   {
+       left = imageLoad(uHeightMap, texelCoord).r;
+       lr_dist = 1.0;
+   }
+   else if (texelCoord.x == uSize.x - 1) // texels on right edge of an image
+   {
+       right = imageLoad(uHeightMap, texelCoord).r;
+       lr_dist = 1.0;
+   }
+   
+   float lr_angle = atan((right - left) / lr_dist) + radians(90.0); // angle of a slope between left and right
+   float  x = cos(lr_angle) * uC;
+   z += sin(lr_angle);
+   
+   
+   // values to interpolation
+   float top = imageLoad(uHeightMap, texelCoord + ivec2(0, 1)).r;
+   float bottom = imageLoad(uHeightMap, texelCoord - ivec2(0, 1)).r;
+   float tb_dist = 2.0;
+   
+   // edges
+   if (texelCoord.y == 0) // texels on bottom edge of an image
+   {
+       bottom = imageLoad(uHeightMap, texelCoord).r;
+       tb_dist = 1.0;
+   }
+   else if (texelCoord.y == uSize.y - 1) // texels on top edge of an image
+   {
+       top = imageLoad(uHeightMap, texelCoord).r;
+       tb_dist = 1.0;
+   }
+   
+   float tb_angle = atan((top - bottom) / tb_dist) + radians(90.0); //  angle of a slope between bottom and top
+   float y = cos(tb_angle) * uC;
+   z += sin(tb_angle);
+   
+   
+   
+   vec3 normal = normalize(vec3(x, y, z));
+   
+   vec4 color = vec4(normal / 2.0 + 0.5, 1.0); // converting vectors from normal space to rgb space
+   imageStore(uNormalMap, texelCoord, color);
+}

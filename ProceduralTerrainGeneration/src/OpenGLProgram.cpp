@@ -155,18 +155,24 @@ ProgramBinary OpenGLProgram::GetProgramBinary() const
 }
 
 
+// Uniform Blocks
+unsigned int OpenGLProgram::GetUniformBlockIndex(const char* name) const
+{
+	return glGetUniformBlockIndex(m_ID, name);
+}
+
+void OpenGLProgram::SetUniformBlockBinding(const char* name, unsigned int binding)
+{
+	return glUniformBlockBinding(m_ID, GetUniformBlockIndex(name), binding);
+}
 
 
-
-// Uniforms
+/// Uniforms ///
 int OpenGLProgram::GetUniformLocation(const char* name) const
 {
 	int location = glGetUniformLocation(m_ID, name);
 	return location;
 }
-
-
-
 
 
 // Int
@@ -358,6 +364,7 @@ void OpenGLProgram::SetDouble4Array(const char* name, int count, const glm::dvec
 	UploadDouble4Array(GetUniformLocation(name), count, ptr);
 }
 
+
 // Matrix
 void OpenGLProgram::SetMat2(const char* name, const glm::mat2& mat)
 {
@@ -374,31 +381,57 @@ void OpenGLProgram::SetMat4(const char* name, const glm::mat4& mat)
 	UploadMat4(GetUniformLocation(name), mat);
 }
 
-void OpenGLProgram::SetMat2Array(const char* name, int count, const glm::mat2& mat)
+void OpenGLProgram::SetMat2Array(const char* name, int count, const glm::mat2* mat)
+{
+	UploadMat2Array(GetUniformLocation(name), count, mat);
+}
+
+void OpenGLProgram::SetMat3Array(const char* name, int count, const glm::mat3* mat)
+{
+	UploadMat3Array(GetUniformLocation(name), count, mat);
+}
+
+void OpenGLProgram::SetMat4Array(const char* name, int count, const glm::mat4* mat)
 {
 	UploadMat4Array(GetUniformLocation(name), count, mat);
 }
 
-void OpenGLProgram::SetMat3Array(const char* name, int count, const glm::mat3& mat)
+
+// Double Matrices
+void OpenGLProgram::SetDoubleMat2(const char* name, const glm::dmat2& mat)
 {
-	UploadMat4Array(GetUniformLocation(name), count, mat);
+	UploadDoubleMat2(GetUniformLocation(name), mat);
 }
 
-void OpenGLProgram::SetMat4Array(const char* name, int count, const glm::mat4& mat)
+void OpenGLProgram::SetDoubleMat3(const char* name, const glm::dmat3& mat)
 {
-	UploadMat4Array(GetUniformLocation(name), count, mat);
+	UploadDoubleMat3(GetUniformLocation(name), mat);
+}
+
+void OpenGLProgram::SetDoubleMat4(const char* name, const glm::dmat4& mat)
+{
+	UploadDoubleMat4(GetUniformLocation(name), mat);
+}
+
+void OpenGLProgram::SetDoubleMat2Array(const char* name, int count, const glm::dmat2* mat)
+{
+	UploadDoubleMat2Array(GetUniformLocation(name), count, mat);
+}
+
+void OpenGLProgram::SetDoubleMat3Array(const char* name, int count, const glm::dmat3* mat)
+{
+	UploadDoubleMat3Array(GetUniformLocation(name), count, mat);
+}
+
+void OpenGLProgram::SetDoubleMat4Array(const char* name, int count, const glm::dmat4* mat)
+{
+	UploadDoubleMat4Array(GetUniformLocation(name), count, mat);
 }
 
 
 
 
-
-
-
-
-
-
-// Uploads
+/// Uploads ///
 
 // Int
 void OpenGLProgram::UploadInt(int location, const int value)
@@ -590,35 +623,67 @@ void OpenGLProgram::UploadDouble4Array(int location, int count, const glm::dvec4
 }
 
 
-// Matrixes
+// Matrices
 void OpenGLProgram::UploadMat2(int location, const glm::mat2& mat)
 {
-	glUniformMatrix2fv(location, 1, false, glm::value_ptr(mat));
+	glUniformMatrix2fv(location, 1, GL_FALSE, glm::value_ptr(mat));
 }
 
 void OpenGLProgram::UploadMat3(int location, const glm::mat3& mat)
 {
-	glUniformMatrix3fv(location, 1, false, glm::value_ptr(mat));
+	glUniformMatrix3fv(location, 1, GL_FALSE, glm::value_ptr(mat));
 }
 
 void OpenGLProgram::UploadMat4(int location, const glm::mat4& mat)
 {
-	glUniformMatrix4fv(location, 1, false, glm::value_ptr(mat));
+	glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(mat));
 }
 
-void OpenGLProgram::UploadMat2Array(int location, int count, const glm::mat2& mat)
+void OpenGLProgram::UploadMat2Array(int location, int count, const glm::mat2* mat)
 {
-	glUniformMatrix2fv(location, count, false, glm::value_ptr(mat));
+	glUniformMatrix2fv(location, count, GL_FALSE, glm::value_ptr(*mat));
 }
 
-void OpenGLProgram::UploadMat3Array(int location, int count, const glm::mat3& mat)
+void OpenGLProgram::UploadMat3Array(int location, int count, const glm::mat3* mat)
 {
-	glUniformMatrix3fv(location, count, false, glm::value_ptr(mat));
+	glUniformMatrix3fv(location, count, GL_FALSE, glm::value_ptr(*mat));
 }
 
-void OpenGLProgram::UploadMat4Array(int location, int count, const glm::mat4& mat)
+void OpenGLProgram::UploadMat4Array(int location, int count, const glm::mat4* mat)
 {
-	glUniformMatrix4fv(location, count, false, glm::value_ptr(mat));
+	glUniformMatrix4fv(location, count, GL_FALSE, glm::value_ptr(*mat));
+}
+
+
+// Double Matrices
+void OpenGLProgram::UploadDoubleMat2(int location, const glm::dmat2& mat)
+{
+	glUniformMatrix2dv(location, 1, GL_FALSE, glm::value_ptr(mat));
+}
+
+void OpenGLProgram::UploadDoubleMat3(int location, const glm::dmat3& mat)
+{
+	glUniformMatrix3dv(location, 1, GL_FALSE, glm::value_ptr(mat));
+}
+
+void OpenGLProgram::UploadDoubleMat4(int location, const glm::dmat4& mat)
+{
+	glUniformMatrix4dv(location, 1, GL_FALSE, glm::value_ptr(mat));
+}
+
+void OpenGLProgram::UploadDoubleMat2Array(int location, int count, const glm::dmat2* mat)
+{
+	glUniformMatrix2dv(location, count, GL_FALSE, glm::value_ptr(*mat));
+}
+
+void OpenGLProgram::UploadDoubleMat3Array(int location, int count, const glm::dmat3* mat)
+{
+	glUniformMatrix3dv(location, count, GL_FALSE, glm::value_ptr(*mat));
+}
+
+void OpenGLProgram::UploadDoubleMat4Array(int location, int count, const glm::dmat4* mat)
+{
+	glUniformMatrix4dv(location, count, GL_FALSE, glm::value_ptr(*mat));
 }
 
 
@@ -626,35 +691,57 @@ void OpenGLProgram::UploadMat4Array(int location, int count, const glm::mat4& ma
 
 
 // creating program, attaching shaders, linking, validating and checking for errors
-// (vertex and fragment shaders are mandatory, geometry and tesselation shaders are optrional)
+// (vertex and fragment shaders are mandatory, geometry and tesselation shaders are optional)
 void OpenGLProgram::LinkProgram(const OpenGLVertexShader& vs, const OpenGLTesselationControlShader* tcs, const OpenGLTesselationEvaluationShader* tes, const OpenGLGeometryShader* gs, const OpenGLFragmentShader& fs)
 {
 	m_ID = glCreateProgram();
+
+	// Attaching shaders
 	glAttachShader(m_ID, vs.GetID());
 	glAttachShader(m_ID, fs.GetID());
-	if (gs)
-		glAttachShader(m_ID, gs->GetID());
 	if (tcs)
 		glAttachShader(m_ID, tcs->GetID());
 	if (tes)
 		glAttachShader(m_ID, tes->GetID());
-	glLinkProgram(m_ID);
+	if (gs)
+		glAttachShader(m_ID, gs->GetID());
 
+	// Linking and checking for linking errors
+	glLinkProgram(m_ID);
 	if (CheckProgramForLinkingErrors(m_ID))
 		throw;
 
+	// Validating
 	glValidateProgram(m_ID);
+	CheckProgramForValidationErrors(m_ID);
+
+	// Detaching shaders
+	glDetachShader(m_ID, vs.GetID());
+	glDetachShader(m_ID, fs.GetID());
+	if (gs)
+		glDetachShader(m_ID, gs->GetID());
+	if (tcs)
+		glDetachShader(m_ID, tcs->GetID());
+	if (tes)
+		glDetachShader(m_ID, tes->GetID());
 }
+
 
 // creating compute program, linking, validating and checking for errors
 void OpenGLProgram::LinkProgram(const OpenGLComputeShader& cs)
 {
+	// Creating program and attaching compute shader
 	m_ID = glCreateProgram();
 	glAttachShader(m_ID, cs.GetID());
-	glLinkProgram(m_ID);
 
+	// Linking and checking for linking errors
+	glLinkProgram(m_ID);
 	if (CheckProgramForLinkingErrors(m_ID))
 		throw;
-
+	
+	// validating
 	glValidateProgram(m_ID);
+	CheckProgramForValidationErrors(m_ID);
+
+	glDetachShader(m_ID, cs.GetID());
 }

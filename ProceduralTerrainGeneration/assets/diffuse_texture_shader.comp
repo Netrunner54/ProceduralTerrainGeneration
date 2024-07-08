@@ -1,0 +1,33 @@
+#version 460
+
+layout (local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+layout (r32f, binding = 0) uniform image2D uHeightMap;
+layout (rgba8, binding = 0) uniform image2D uDiffuseMap;
+
+
+void main()
+{
+  ivec2 texelCoord = ivec2(gl_GlobalInvocationID.xy);
+  
+  float altitude = imageLoad(uHeightMap, texelCoord).r;
+  
+  // setting pixel color based on altitude
+	vec3 color;
+	if (altitude <= 0.005)				// sea
+		color = vec3(0.0, 0.2, 0.282);
+	else if (altitude < 0.01)			// beaches
+		color = vec3(0.62, 0.65, 0.23);
+	else if (altitude < 0.3)			// fields/forests
+		color = vec3(0.0, mix(0.6, 0.25, altitude/0.3), mix(0.1, 0.0, altitude/0.3));
+		
+	else if ( altitude < 0.35)
+		color = vec3(mix(0.0, 0.15, (altitude - 0.3)/0.05), mix(0.25, 0.15, (altitude -0.3)/0.05), mix(0.0, 0.15, (altitude-0.3)/0.05));
+	  
+	else if (altitude < 0.7)			// mountains
+		color = vec3(vec3(mix(0.15, 0.23, (altitude-0.35)/0.25)));
+	else								// peaks
+		color = vec3(vec3(mix(0.6, 0.95, (altitude-0.7)/0.2)));
+		
+  
+  imageStore(uDiffuseMap, texelCoord, vec4(color, 1.0));
+}

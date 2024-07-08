@@ -3,21 +3,21 @@
 layout (vertices=4) out;
 
 uniform mat4 uView;
-uniform int uHighQuality;
+uniform bool uHighQuality = false;
 
 in vec2 vTexCoord[];
 
-out vec2 tTexCoord[];
+out vec2 tcTexCoord[];
 
 void main()
 {
 	gl_out[gl_InvocationID].gl_Position = gl_in[gl_InvocationID].gl_Position;
-	tTexCoord[gl_InvocationID] = vTexCoord[gl_InvocationID];
+	tcTexCoord[gl_InvocationID] = vTexCoord[gl_InvocationID];
 
 	if (gl_InvocationID == 0)
 	{
 		// max tesselation on each patch
-		if (uHighQuality == 1)
+		if (uHighQuality)
 		{
 			gl_TessLevelOuter[0] = 64.0; // left
 			gl_TessLevelOuter[1] = 64.0; // bottom
@@ -33,7 +33,7 @@ void main()
 			const float MIN_TESSELATION_LEVEL = 2.0;
 			const float MAX_TESSELATION_LEVEL = 6.0;
 			const float MIN_DISTANCE = 16.0;
-			const float MAX_DISTANCE = 1024.0;
+			const float MAX_DISTANCE = 2048.0;
 			
 			// distances to patch corners
 			float distance00 = clamp(distance(uView * gl_in[0].gl_Position, vec4(0.0, 0.0, 0.0, 1.0) - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE), 0.0, 1.0);

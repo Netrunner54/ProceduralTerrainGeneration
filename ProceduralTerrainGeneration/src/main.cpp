@@ -32,18 +32,20 @@ struct Vertex
 	glm::vec2 tex_coord;
 };
 
-CameraController3D c({ 0.0f, 100.0f, 0.0f }, 45.0f);
+CameraController3D c({ 0.0f, 300.0f, 0.0f }, glm::radians(45.0f));
 
 int main()
 {
 	glfwInit();
 	GLFWwindow* window;
 	window = glfwCreateWindow(1920, 1080, "Hello World", NULL, NULL);
+	//window = glfwCreateWindow(2560, 1440, "Hello World", glfwGetPrimaryMonitor(), NULL);
 	glfwMakeContextCurrent(window);
 
 	glfwWindowHint(GLFW_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_VERSION_MINOR, 6);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	glfwWindowHint(GLFW_SAMPLES, 4);
 	
 	glfwSwapInterval(0);
 
@@ -58,6 +60,8 @@ int main()
 	OpenGLErrors::Enable();
 
 	int width = 4096, height = 4096;
+	//int width = 8192, height = 8192;
+	//int width = 1024, height = 1024;
 	OpenGLTexture2D height_map(width, height, OpenGLTexture2D::ALPHA32F);
 
 	unsigned int rez = 64;
@@ -122,16 +126,33 @@ int main()
 
 	
 
-	// program
-	std::string vs_src = read_file("assets/shader.vert");
-	std::string fs_src = read_file("assets/shader.frag");
-	std::string tcs_src = read_file("assets/shader.tesc");
-	std::string tes_src = read_file("assets/shader.tese");
-	OpenGLProgram p(vs_src, tcs_src, tes_src, fs_src);
+	// programs
+	std::string vs_src = read_file("assets/terrain_shader.vert");
+	std::string fs_src = read_file("assets/terrain_shader.frag");
+	std::string tcs_src = read_file("assets/terrain_shader.tesc");
+	std::string tes_src = read_file("assets/terrain_shader.tese");
+	OpenGLProgram terrain_rendering_program(vs_src, tcs_src, tes_src, fs_src);
 
-	std::string cs_src = read_file("assets/shader.comp");
-	OpenGLProgram cp(cs_src);
+	std::string cs_src = read_file("assets/terrain_generation_shader.comp");
+	OpenGLProgram terrain_generation_program(cs_src);	
+
+	std::string normal_map_from_hight_map_shader_src = read_file("assets/normal_map_from_hight_map_shader.comp");
+	OpenGLProgram normal_map_from_hight_map_program(normal_map_from_hight_map_shader_src);
+
+	std::string diffuse_map_from_height_map_src = read_file("assets/diffuse_texture_shader.comp");
+	OpenGLProgram diffuse_map_from_height_map_program(diffuse_map_from_height_map_src);
+
+
+
+
+	// normal texture
+	// TODO: Find other solution than using RGBA32F
+	OpenGLTexture2D normal_texture(width, height, OpenGLTexture2D::RGBA32F);
+
+
+	OpenGLTexture2D diffuse_texture(width, height, OpenGLTexture2D::RGBA8);
 	
+
 
 
 
@@ -140,13 +161,39 @@ int main()
 	glPatchParameteri(GL_PATCH_VERTICES, 4);
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
+	glFrontFace(GL_CW);
+
+	glEnable(GL_MULTISAMPLE);
+
+
+	// binding textures and vertex buffer
 	glBindTextureUnit(0, height_map.GetID());
-	glBindImageTexture(1, height_map.GetID(), 0, 0, 0, GL_READ_WRITE, GL_R32F);
+	glBindImageTexture(0, height_map.GetID(), 0, 0, 0, GL_READ_WRITE, GL_R32F);
+	glBindTextureUnit(1, normal_texture.GetID());
+	glBindImageTexture(1, normal_texture.GetID(), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
+	glBindTextureUnit(2, diffuse_texture.GetID());
+	glBindImageTexture(2, diffuse_texture.GetID(), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA8);
 	glBindVertexArray(va.GetID());
 
 	// should recalculate map variables
 	bool recalculate_map = true;
 	bool recalculated = false;
+
+	// render mode variables
+	bool wireframe_mode = false;
+	bool wireframe_mode_changed = false;
+
+	bool high_quality_mode = false;
+	bool high_quality_mode_changed = false;
+
+	bool normal_mode = false;
+	bool normal_mode_changed = false;
+
+
+
+	//bool normal_mode = false;
 
 	// timestep variables
 	float timestep = 0.0f;
@@ -181,8 +228,50 @@ int main()
 		else
 			speed = 100.0f;
 
+		// Press F to switch wireframe mode
+		if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS)
+		{
+			if (!wireframe_mode_changed)
+			{
+				wireframe_mode = !wireframe_mode;
+				wireframe_mode_changed = true;
 
-		// new map
+				if (wireframe_mode)
+					glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+				else
+					glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+			}
+		}
+		else if (glfwGetKey(window, GLFW_KEY_F) == GLFW_RELEASE)
+			wireframe_mode_changed = false;
+
+
+		// Press N to switch normal mode
+		if (glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS)
+		{
+			if (!normal_mode_changed)
+			{
+				normal_mode = !normal_mode;
+				normal_mode_changed = true;
+			}
+		}
+		else if (glfwGetKey(window, GLFW_KEY_N) == GLFW_RELEASE)
+			normal_mode_changed = false;
+
+		// Press H to switch high quality mode
+		if (glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS)
+		{
+			if (!high_quality_mode_changed)
+			{
+				high_quality_mode = !high_quality_mode;
+				high_quality_mode_changed = true;
+			}
+		}
+		else if (glfwGetKey(window, GLFW_KEY_H) == GLFW_RELEASE)
+			high_quality_mode_changed = false;
+
+
+		// Press R to generate new map
 		if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
 			if (!recalculated)
 				recalculate_map = true;
@@ -191,13 +280,30 @@ int main()
 			recalculated = true;
 			recalculate_map = false;
 
-			// runing compute shader to generate new pseudo random map
-			glUseProgram(cp.GetID());
-			cp.SetInt("uImage", 1);
-			cp.SetFloat("uSeed", (float)glfwGetTime());
+			// generate pseudo random terrain using perlin noise
+			glUseProgram(terrain_generation_program.GetID());
+			terrain_generation_program.SetInt("uImage", 0);
+			terrain_generation_program.SetFloat("uSeed", (float)glfwGetTime());
+			terrain_generation_program.SetInt("uPitch", 1024);
+			terrain_generation_program.SetInt("uOctaves", 8);
 			glDispatchCompute(width, height, 1);
 			glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+			
+			// generate normal map
+			glUseProgram(normal_map_from_hight_map_program.GetID());
+			normal_map_from_hight_map_program.SetInt("uHeightMap", 0);
+			normal_map_from_hight_map_program.SetInt("uNormalMap", 1);
+			normal_map_from_hight_map_program.SetInt2("uSize", { width, height });
+			normal_map_from_hight_map_program.SetFloat("uC", 256.0f);
+			glDispatchCompute(width, height, 1);
+			glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);	
 
+			// generate diffuse map
+			glUseProgram(diffuse_map_from_height_map_program.GetID());
+			diffuse_map_from_height_map_program.SetInt("uHeightMap", 0);
+			diffuse_map_from_height_map_program.SetInt("uDiffuseMap", 2);
+			glDispatchCompute(width, height, 1);
+			glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 		}
 		if (glfwGetKey(window, GLFW_KEY_R) == GLFW_RELEASE)
 		{
@@ -217,11 +323,16 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		// drawing terrain
-		glUseProgram(p.GetID());
-		p.SetMat4("uVP", c.GetViewProjectionMatrix());
-		p.SetMat4("uView", c.GetViewMatrix());
-		p.SetInt("uHighQuality", 1);
-		p.SetInt("uHeightMap", 0);
+		glUseProgram(terrain_rendering_program.GetID());
+		terrain_rendering_program.SetMat4("uVP", c.GetViewProjectionMatrix());
+		terrain_rendering_program.SetMat4("uView", c.GetViewMatrix());
+		terrain_rendering_program.SetFloat("uMaxHeight", 256.0f);
+		terrain_rendering_program.SetBool("uHighQuality", high_quality_mode);
+		terrain_rendering_program.SetBool("uNormalMode", normal_mode);
+		terrain_rendering_program.SetInt("uHeightMap", 0);
+		terrain_rendering_program.SetInt("uNormalMap", 1);
+		terrain_rendering_program.SetInt("uDiffuseMap", 2);
+		terrain_rendering_program.SetFloat3("uLightDir", { 0.3f, 1.0f, 0.5f });
 		glDrawArrays(GL_PATCHES, 0, rez * rez * 4);
 
 		// swapping buffers and polling events

@@ -4,6 +4,8 @@ layout (local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
 layout (r32f, binding = 0) uniform image2D uImage;
 uniform float uSeed;
+uniform int uOctaves = 8;
+uniform int uPitch = 1024;
 
 
 // pseudo random number generation
@@ -22,17 +24,17 @@ float bicubic_interpolation(in float a, in float b, in float w)
 
 
 // generates perlin noise value for given coordinates
-float perlin_noise_2D(in ivec2 p, in int octaves = 4)
+float perlin_noise_2D(in ivec2 p, int pitch = 1024, in int octaves = 4)
 {
 	float value = 0.0;
 	float scale = 1.0;
 	float scale_acc = 0.0;
 
-	int pitch = 64;
+	//int pitch = 1024;
 	for (int o = 0; o < octaves; o++)
 	{
 		// calculating pitch
-		pitch = 512 >> o;
+		pitch >>= 1;
 
 		// setting sampling points
 		int X0 = p.x / pitch;
@@ -67,12 +69,10 @@ void main()
 
 	// calculating value of each pixel
 	float see_level = 0.5;
-	float value = perlin_noise_2D(texel_coord, 7);
+	float value = perlin_noise_2D(texel_coord, uPitch, uOctaves);
 	if (value <= see_level)
 		value = 0.0;
 	else
-		//value = (value - see_level) / (1.0 + (1.0 - max_level) - see_level);
-		//value = (value - see_level) * (value / see_level);
 		value = mix(0.0, 1.0, (value - see_level) / (1.0 - see_level));
 
 	// storing value of a pixel
